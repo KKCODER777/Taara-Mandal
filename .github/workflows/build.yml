@@ -1,0 +1,15 @@
+name: Build APK
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build APK
+        uses: ArtemSBulgakov/buildozer-action@v1
+        with:
+          command: buildozer android debug
+      - uses: actions/upload-artifact@v3
+        with:
+          name: taara-mandal-apk
+          path: bin/*.apk
