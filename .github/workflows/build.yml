@@ -26,31 +26,46 @@ jobs:
 
       - name: Setup Android SDK manually
         run: |
-          mkdir -p $HOME/.buildozer/android/platform
-          cd $HOME/.buildozer/android/platform
+          SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+          mkdir -p $SDK_ROOT
 
-          # Download Android command line tools
-          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip
-          unzip -q commandlinetools-linux-9477386_latest.zip
-          mkdir -p android-sdk/cmdline-tools/latest
-          mv cmdline-tools/* android-sdk/cmdline-tools/latest/ || true
+          # Download cmdline-tools
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdtools.zip
+          unzip -q cmdtools.zip -d cmdtools_tmp
 
-          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          export PATH=$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
+          # Put in the exact path Buildozer expects
+          mkdir -p $SDK_ROOT/tools/bin
+          mkdir -p $SDK_ROOT/cmdline-tools/latest
+          cp -r cmdtools_tmp/cmdline-tools/* $SDK_ROOT/cmdline-tools/latest/
 
-          # Accept licenses and install required packages
-          yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT --licenses || true
-          sdkmanager --sdk_root=$ANDROID_SDK_ROOT \
+          # Create symlink so Buildozer finds sdkmanager in tools/bin
+          ln -sf $SDK_ROOT/cmdline-tools/latest/bin/sdkmanager $SDK_ROOT/tools/bin/sdkmanager
+          ln -sf $SDK_ROOT/cmdline-tools/latest/bin/avdmanager $SDK_ROOT/tools/bin/avdmanager
+
+          export PATH=$SDK_ROOT/cmdline-tools/latest/bin:$SDK_ROOT/tools/bin:$PATH
+
+          # Accept licenses
+          yes | sdkmanager --sdk_root=$SDK_ROOT --licenses || true
+
+          # Install required SDK components
+          sdkmanager --sdk_root=$SDK_ROOT \
             "build-tools;33.0.2" \
             "platforms;android-33" \
-            "platform-tools" \
-            "ndk;25.2.9519653"
+            "platform-tools"
+
+          # Install NDK
+          sdkmanager --sdk_root=$SDK_ROOT "ndk;25.2.9519653"
+
+          echo "SDK setup complete"
+          ls $SDK_ROOT/build-tools/
 
       - name: Build APK
         run: |
-          export ANDROID_SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
-          export ANDROID_NDK_ROOT=$HOME/.buildozer/android/platform/android-sdk/ndk/25.2.9519653
-          buildozer android debug
+          SDK_ROOT=$HOME/.buildozer/android/platform/android-sdk
+          export ANDROID_SDK_ROOT=$SDK_ROOT
+          export ANDROID_NDK_ROOT=$SDK_ROOT/ndk/25.2.9519653
+          export PATH=$SDK_ROOT/cmdline-tools/latest/bin:$SDK_ROOT/tools/bin:$SDK_ROOT/platform-tools:$PATH
+          buildozer android debug 2>&1
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
