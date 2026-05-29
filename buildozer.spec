@@ -21,7 +21,7 @@ requirements = python3,kivy==2.3.0,matplotlib,numpy,pillow
 # Android settings
 android.permissions = INTERNET
 android.api = 33
-android.minapi = 21
+android.minapi = 24
 android.ndk = 25b
 android.archs = arm64-v8a, armeabi-v7a
 
