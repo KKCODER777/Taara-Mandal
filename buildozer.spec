@@ -16,12 +16,12 @@ version = 1.0
 entrypoint = main.py
 
 # Requirements — these get compiled into the APK
-requirements = python3,kivy==2.3.0,matplotlib,numpy,pillow
+requirements = python3,kivy==2.3.0,matplotlib,numpy==1.26.4,pillow
 
 # Android settings
 android.permissions = INTERNET
 android.api = 33
-android.minapi = 21
+android.minapi = 24
 android.ndk = 25b
 android.archs = arm64-v8a, armeabi-v7a
 
